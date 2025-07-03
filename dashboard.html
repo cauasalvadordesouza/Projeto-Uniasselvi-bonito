@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard - Cadastro de Produtos</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: linear-gradient(135deg, #71b7e6, #9b59b6);
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      color: #333;
+    }
+    header {
+      background: #9b59b6;
+      color: white;
+      padding: 18px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      font-weight: 600;
+      font-size: 22px;
+    }
+    button.logout {
+      background: #e74c3c;
+      border:none;
+      padding: 10px 18px;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background-color 0.3s ease;
+      box-shadow: 0 5px #b02a27;
+    }
+    button.logout:hover {
+      background: #b02a27;
+      box-shadow: 0 3px #7a1c1a;
+    }
+
+    main {
+      background: #fff;
+      max-width: 700px;
+      margin: 40px auto;
+      padding: 30px 35px;
+      border-radius: 15px;
+      box-shadow: 0 15px 25px rgba(0,0,0,0.2);
+      flex-grow: 1;
+      animation: fadeInUp 0.8s ease forwards;
+      opacity: 0;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 15px 18px;
+      margin-bottom: 18px;
+      border: 1.8px solid #ddd;
+      border-radius: 10px;
+      font-size: 17px;
+      font-weight: 500;
+      outline: none;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+      resize: none;
+    }
+    input:focus, textarea:focus {
+      border-color: #9b59b6;
+      box-shadow: 0 0 10px #9b59b6;
+    }
+    button.submit {
+      background: #9b59b6;
+      color: white;
+      border: none;
+      padding: 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: 600;
+      width: 100%;
+      box-shadow: 0 8px #7d3d96;
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    button.submit:hover {
+      background: #7d3d96;
+      box-shadow: 0 5px #5e2d6e;
+    }
+    .msg {
+      margin-bottom: 20px;
+      color: #e74c3c;
+      font-weight: 700;
+      text-align: center;
+      min-height: 24px;
+      transition: color 0.3s ease;
+    }
+    .msg.success {
+      color: #27ae60;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 25px;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+    th, td {
+      padding: 14px 18px;
+      border-bottom: 1px solid #eee;
+      text-align: left;
+      font-weight: 500;
+      color: #555;
+    }
+    th {
+      background: #f9f9f9;
+      font-weight: 600;
+    }
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Animações */
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  Cadastro de Produtos
+  <button class="logout" onclick="logout()">Sair</button>
+</header>
+
+<main>
+  <div class="msg" id="msg"></div>
+
+  <input type="text" id="productName" placeholder="Nome do Produto" autocomplete="off" />
+  <textarea id="productDesc" rows="3" placeholder="Descrição do Produto" autocomplete="off"></textarea>
+  <input type="number" id="productPrice" placeholder="Preço (R$)" step="0.01" min="0" />
+
+  <button class="submit" onclick="addProduct()">Cadastrar Produto</button>
+
+  <table id="productsTable" style="display:none;">
+    <thead>
+      <tr><th>Nome</th><th>Descrição</th><th>Preço (R$)</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</main>
+
+<script>
+  const loggedUser = localStorage.getItem('loggedUser');
+  if(!loggedUser){
+    alert('Você precisa estar logado para acessar essa página.');
+    window.location.href = 'index.html';
+  }
+
+  function logout(){
+    localStorage.removeItem('loggedUser');
+    window.location.href = 'index.html';
+  }
+
+  function getProducts(){
+    return JSON.parse(localStorage.getItem('products_' + loggedUser) || '[]');
+  }
+
+  function setProducts(products){
+    localStorage.setItem('products_' + loggedUser, JSON.stringify(products));
+  }
+
+  function addProduct(){
+    const name = document.getElementById('productName').value.trim();
+    const desc = document.getElementById('productDesc').value.trim();
+    const price = parseFloat(document.getElementById('productPrice').value);
+
+    const msgEl = document.getElementById('msg');
+    msgEl.className = 'msg';
+
+    if(!name || !desc || isNaN(price) || price < 0){
+      msgEl.innerText = 'Preencha todos os campos corretamente!';
+      return;
+    }
+
+    let products = getProducts();
+    products.push({name, desc, price: price.toFixed(2)});
+    setProducts(products);
+
+    msgEl.classList.add('success');
+    msgEl.innerText = 'Produto cadastrado com sucesso!';
+
+    // Limpar campos
+    document.getElementById('productName').value = '';
+    document.getElementById('productDesc').value = '';
+    document.getElementById('productPrice').value = '';
+
+    showProducts();
+  }
+
+  function showProducts(){
+    const products = getProducts();
+    const table = document.getElementById('productsTable');
+    const tbody = table.querySelector('tbody');
+
+    if(products.length === 0){
+      table.style.display = 'none';
+      return;
+    }
+
+    tbody.innerHTML = '';
+    products.forEach(p => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${p.name}</td><td>${p.desc}</td><td>${p.price}</td>`;
+      tbody.appendChild(tr);
+    });
+
+    table.style.display = 'table';
+  }
+
+  showProducts();
+</script>
+
+</body>
+</html>

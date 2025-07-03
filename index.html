@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login / Cadastro</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
+
+    * {
+      box-sizing: border-box;
+      transition: all 0.3s ease;
+    }
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: linear-gradient(135deg, #71b7e6, #9b59b6);
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      color: #333;
+      overflow-x: hidden;
+    }
+    .container {
+      background: #fff;
+      padding: 40px 30px;
+      border-radius: 15px;
+      box-shadow: 0 15px 25px rgba(0,0,0,0.2);
+      max-width: 400px;
+      width: 100%;
+      animation: fadeIn 0.8s ease forwards;
+      opacity: 0;
+    }
+    .container.show {
+      opacity: 1;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-weight: 600;
+      color: #4b4b4b;
+      letter-spacing: 1.2px;
+    }
+    input[type=text], input[type=password] {
+      width: 100%;
+      padding: 12px 15px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      border: 1.8px solid #ddd;
+      font-size: 16px;
+      font-weight: 500;
+      outline: none;
+    }
+    input[type=text]:focus, input[type=password]:focus {
+      border-color: #9b59b6;
+      box-shadow: 0 0 8px #9b59b6;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      background: #9b59b6;
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 6px #7d3d96;
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    button:hover {
+      background: #7d3d96;
+      box-shadow: 0 4px #5e2d6e;
+    }
+    .msg {
+      color: #e74c3c;
+      margin-bottom: 20px;
+      text-align: center;
+      font-weight: 600;
+      min-height: 22px;
+      transition: color 0.3s ease;
+    }
+    .msg.success {
+      color: #27ae60;
+    }
+    .link {
+      text-align: center;
+      margin-top: 12px;
+      font-weight: 500;
+      color: #555;
+    }
+    .link a {
+      color: #9b59b6;
+      cursor: pointer;
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.3s ease;
+    }
+    .link a:hover {
+      color: #7d3d96;
+      text-decoration: underline;
+    }
+
+    /* Animação fadeIn */
+    @keyframes fadeIn {
+      to { opacity: 1; transform: translateY(0); }
+      from { opacity: 0; transform: translateY(20px); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container show" id="loginForm">
+  <h2>Login</h2>
+  <div class="msg" id="loginMsg"></div>
+  <input type="text" id="loginEmail" placeholder="Email" autocomplete="username" />
+  <input type="password" id="loginPassword" placeholder="Senha" autocomplete="current-password" />
+  <button onclick="login()">Entrar</button>
+  <div class="link">Não tem conta? <a onclick="showRegister()">Cadastre-se</a></div>
+</div>
+
+<div class="container" id="registerForm" style="display:none;">
+  <h2>Cadastro</h2>
+  <div class="msg" id="registerMsg"></div>
+  <input type="text" id="registerEmail" placeholder="Email" autocomplete="username" />
+  <input type="password" id="registerPassword" placeholder="Senha" autocomplete="new-password" />
+  <button onclick="register()">Cadastrar</button>
+  <div class="link">Já tem conta? <a onclick="showLogin()">Faça login</a></div>
+</div>
+
+<script>
+  function showRegister(){
+    fadeOut(document.getElementById('loginForm'), () => {
+      document.getElementById('loginForm').style.display = 'none';
+      document.getElementById('registerForm').style.display = 'block';
+      fadeIn(document.getElementById('registerForm'));
+    });
+    clearMessages();
+  }
+  function showLogin(){
+    fadeOut(document.getElementById('registerForm'), () => {
+      document.getElementById('registerForm').style.display = 'none';
+      document.getElementById('loginForm').style.display = 'block';
+      fadeIn(document.getElementById('loginForm'));
+    });
+    clearMessages();
+  }
+  function clearMessages(){
+    document.getElementById('loginMsg').innerText = '';
+    document.getElementById('registerMsg').innerText = '';
+    document.getElementById('registerMsg').style.color = '#e74c3c';
+  }
+
+  function fadeOut(element, callback){
+    element.style.opacity = 1;
+    let op = 1;
+    const timer = setInterval(() => {
+      op -= 0.1;
+      element.style.opacity = op;
+      if(op <= 0){
+        clearInterval(timer);
+        callback();
+      }
+    }, 30);
+  }
+  function fadeIn(element){
+    element.style.opacity = 0;
+    let op = 0;
+    const timer = setInterval(() => {
+      op += 0.1;
+      element.style.opacity = op;
+      if(op >= 1){
+        clearInterval(timer);
+      }
+    }, 30);
+  }
+
+  function getUsers(){
+    return JSON.parse(localStorage.getItem('users') || '[]');
+  }
+
+  function setUsers(users){
+    localStorage.setItem('users', JSON.stringify(users));
+  }
+
+  function register(){
+    const email = document.getElementById('registerEmail').value.trim();
+    const password = document.getElementById('registerPassword').value.trim();
+
+    if(!email || !password){
+      document.getElementById('registerMsg').innerText = 'Preencha todos os campos!';
+      return;
+    }
+
+    let users = getUsers();
+    if(users.find(u => u.email === email)){
+      document.getElementById('registerMsg').innerText = 'Email já cadastrado!';
+      return;
+    }
+
+    users.push({email, password});
+    setUsers(users);
+    const msgEl = document.getElementById('registerMsg');
+    msgEl.style.color = '#27ae60';
+    msgEl.innerText = 'Cadastro realizado com sucesso! Você pode fazer login.';
+    setTimeout(() => {
+      showLogin();
+    }, 2000);
+  }
+
+  function login(){
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value.trim();
+
+    if(!email || !password){
+      document.getElementById('loginMsg').innerText = 'Preencha todos os campos!';
+      return;
+    }
+
+    let users = getUsers();
+    const user = users.find(u => u.email === email && u.password === password);
+
+    if(!user){
+      document.getElementById('loginMsg').innerText = 'Email ou senha inválidos!';
+      return;
+    }
+
+    localStorage.setItem('loggedUser', email);
+    window.location.href = 'dashboard.html';
+  }
+</script>
+
+</body>
+</html>
